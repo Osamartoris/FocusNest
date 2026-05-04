@@ -1,11 +1,20 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 
 const STORAGE_KEY = 'focusnest_bookings'
 
 function readBookings() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    return raw ? JSON.parse(raw) : []
+    const parsed = raw ? JSON.parse(raw) : []
+
+    // Keep backward compatibility with Design Before entries.
+    return parsed.map((booking) => ({
+      reminderMinutes: booking.reminderMinutes ?? 10,
+      reminderLabel: booking.reminderLabel ?? 'Reminder set 10 minutes before booking ends',
+      locationLabel: booking.locationLabel ?? 'Campus room location',
+      capacity: booking.capacity ?? 'Not specified',
+      ...booking,
+    }))
   } catch {
     return []
   }
@@ -22,6 +31,8 @@ export function useBookings() {
     const newBooking = {
       id: `bk-${Date.now()}`,
       status: 'Confirmed',
+      reminderMinutes: 10,
+      reminderLabel: 'Reminder set 10 minutes before booking ends',
       createdAt: new Date().toISOString(),
       ...bookingPayload,
     }
@@ -30,8 +41,33 @@ export function useBookings() {
     return newBooking
   }
 
-  const removeBooking = (bookingId) => {
-    setBookings((previous) => previous.filter((booking) => booking.id !== bookingId))
+  const updateBooking = (bookingId, updates) => {
+    let updatedBooking = null
+
+    setBookings((previous) =>
+      previous.map((booking) => {
+        if (String(booking.id) !== String(bookingId)) {
+          return booking
+        }
+
+        updatedBooking = {
+          ...booking,
+          ...updates,
+          updatedAt: new Date().toISOString(),
+        }
+
+        return updatedBooking
+      }),
+    )
+
+    return updatedBooking
+  }
+
+  const cancelBooking = (bookingId) => {
+    return updateBooking(bookingId, {
+      status: 'Cancelled',
+      cancelledAt: new Date().toISOString(),
+    })
   }
 
   const getBookingById = (bookingId) =>
@@ -40,7 +76,9 @@ export function useBookings() {
   return {
     bookings,
     addBooking,
-    removeBooking,
+    updateBooking,
+    cancelBooking,
     getBookingById,
   }
 }
+

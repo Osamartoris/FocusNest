@@ -1,4 +1,4 @@
-import { createContext, useContext } from 'react'
+﻿import { createContext, useContext } from 'react'
 import { useBookings } from '../hooks/useBookings'
 
 const BookingsContext = createContext(null)
@@ -18,3 +18,4 @@ export function useBookingsContext() {
 
   return context
 }
+

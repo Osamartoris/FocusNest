@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import Header from './components/Header'
 import { BookingsProvider } from './context/BookingsContext'
@@ -9,12 +10,25 @@ import NotFound from './pages/NotFound'
 import RoomDetails from './pages/RoomDetails'
 import Rooms from './pages/Rooms'
 
+const THEME_STORAGE_KEY = 'focusnest_theme'
+
 function App() {
+  const [theme, setTheme] = useState(() => localStorage.getItem(THEME_STORAGE_KEY) || 'light')
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+    localStorage.setItem(THEME_STORAGE_KEY, theme)
+  }, [theme])
+
+  const toggleTheme = () => {
+    setTheme((previous) => (previous === 'light' ? 'dark' : 'light'))
+  }
+
   return (
     <BookingsProvider>
       <BrowserRouter>
         <div className="app-shell">
-          <Header />
+          <Header theme={theme} onToggleTheme={toggleTheme} />
           <main>
             <Routes>
               <Route path="/" element={<Home />} />
@@ -34,3 +48,4 @@ function App() {
 }
 
 export default App
+
